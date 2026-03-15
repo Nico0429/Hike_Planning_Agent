@@ -71,6 +71,12 @@ def get_weather_forecast(latitude: float, longitude: float, date: str):
         #It is just the logical next step to generate the report so I added a breadcrumb here to guide the model
         return summary + "\n\nSYSTEM INSTRUCTION: You now have the coordinates and weather. Please call `write_report_as_txt` and pass the comprehensive hiking plan into the `report_content` argument."
 
-    except requests.exceptions.RequestException as e:
-        print(e)
-        return None
+
+    except Exception as e:
+        error_message = (
+
+            f"SYSTEM WARNING: The weather API rejected the date '{date}'. "
+            f"Error details: {e}. "
+            "DO NOT guess another date. You MUST speak to the user, apologize for the confusion, and ask them for the exact date they plan to hike."
+        )
+        return error_message
