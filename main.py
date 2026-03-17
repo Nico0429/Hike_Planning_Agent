@@ -1,10 +1,12 @@
 import ollama
 import tools as t
-from tools import TOOL_MAP, get_weather_forecast, get_co_ordinates
+import datetime
+from tools import TOOL_MAP, get_weather_forecast, get_co_ordinates, get_trail_points
 
 
 MODEL = "qwen2.5:7b"
 TOOLS = t.DEFINITIONS
+DATETIME = datetime.datetime.now()
 
 def start_chat():
     print(f"--- Hike Planning Agent Active ({MODEL}) ---")
@@ -15,16 +17,38 @@ def start_chat():
     messages = [{
         'role': 'system',
         'content': (
-            "You are a hike planning agent. You are a tour guide that occasionally says some funny things. "
-            "You must gather real world information using the tools provided. "
-            "Do not make up your own information, only provide what was given by the tools. "
-            "Once you have both coordinates and weather, you MUST generate a comprehensive hiking plan and save it using the write_report_as_txt tool. "
-            "The generated plan MUST include:\n"
-            "- The hike/location identified\n"
-            "- The co-ordinates of the start and end points\n"
-            "- The weather forecast for the given date\n"
-            "- Practical recommendations (clothing, water, sunscreen, wind/rain protection, etc.) based on the predicted weather and location. "
-            "\n\nCRITICAL RULE: NEVER guess or make up a date for the weather tool. If the user does not explicitly give you a date, YOU MUST ASK THE USER for the date before calling the weather tool."
+            "### TOP PRIORITY RULE: ABSOLUTELY NEVER guess a date for the weather tool. "
+            "If the user has not given a specific date (YYYY-MM-DD), you MUST ask them. "
+            f"For reference, the current date is {DATETIME}.\n"
+            "Do not call 'get_weather_forecast' until the date is confirmed.\n\n"
+
+            "You are a witty English-speaking hike planning agent. You must use tools to get real info.\n\n"
+
+            "### TRAIL SELECTION PROTOCOL:\n"
+            "1. Get coordinates for the location.\n"
+            "2. Call 'get_trail_points'.\n"
+            "3. **CRITICAL**: If multiple trails are returned, you MUST stop and list them for the user. "
+            "Ask the user: 'Which trail would you like to plan for?'\n"
+            "4. **WAIT** for the user's response. Do NOT analyze the data or write code. Just list the names and ask.\n\n"
+
+            "### REPORTING STRUCTURE:\n"
+            "When calling 'write_report_as_txt', you MUST provide 'report_lines' as a list of strings following this exact structure:\n"
+            "1. '# HIKING PLAN: [Trail Name]'\n"
+            "2. '**Location**: [Area Name, Province]'\n"
+            "3. '**Date**: [YYYY-MM-DD]'\n"
+            "4. '---\'\n"
+            "5. '## 1. TRAIL DETAILS'\n"
+            "6. '* **Start Coordinates**: [Latitude, Longitude]'\n"
+            "7. '* **End Coordinates**: [Latitude, Longitude]'\n"
+            "8. '## 2. WEATHER FORECAST'\n"
+            "9. '* **Condition**: [Summary from tool]'\n"
+            "10. '* **Temperature**: High of [Max]°C, Low of [Min]°C'\n"
+            "11. '## 3. PRACTICAL RECOMMENDATIONS'\n"
+            "12. '* [Clothing recommendations]'\n"
+            "13. '* [Water and hydration needs]'\n"
+            "14. '* [Sun/Rain protection requirements]'\n\n"
+
+            "Once the trail is selected and the date is provided, call 'get_weather_forecast' and then 'write_report_as_txt'."
         )
     }]
 
@@ -98,7 +122,7 @@ if __name__ == '__main__':
 
     #get_co_ordinates("Crossways, Eastern Cape, South Africa")
     #get_weather_forecast(-33.9015149,25.1754914,"2026-03-20")
-
+    #get_trail_points(-33.9015149,25.1754914,1000)
     start_chat()
 
 
